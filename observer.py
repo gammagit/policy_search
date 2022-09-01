@@ -7,11 +7,11 @@ def get_gen_params():
     params['init_bound'] = (0, 10)  # initial slope (degrees) and intercept of bound
     params['max_step'] = 50 # maximum time step (time is discrete)
     params['rr_window'] = 'fixed' # 'fixed' / 'dynamic' length of window
-    params['win_len'] = 20 # number of trials over which to estimate reward-rate
+    params['win_len'] = 100 # number of trials over which to estimate reward-rate
     params['rwd'] = 100 # reward if correct
     params['penalty'] = 0 # reward if incorrect
 
-    params['update_method'] = 'greedy' # 'grad': gradient descent; 'greedy': epsilon-greedy
+    params['update_method'] = 'grad' # 'grad': gradient descent; 'greedy': epsilon-greedy
 
     ### Parameters related to Gradient descent
     params['lr'] = 2 # learning rate for gradient descent
@@ -157,35 +157,48 @@ def gradient_descent(current_bound):
     return [new_bound, walks_curr, decisions_curr, true_states_curr, rr_curr]
 
 
-def greedy_search(current_bound):
-    ''' Sample new location. If RR is better at new location, then jump with probability greedy_eps. Otherwise stay.
+def greedy_search(current_bound, rr_seq):
+    ''' Sample new location with probability greedy_eps. If RR is better at new location, then jump.
+        rr_seq = a list of RRs experienced at current location
     '''
     params = get_gen_params()
 
     ### Estimate RR at current location
-    ### TBD: Should be averaged with previous estimate
-    ###      This will also average out noise based on value of eps
     (rr_curr, walks_curr, decisions_curr, true_states_curr) = estimate_rr(current_bound)
+    rr_seq.append(rr_curr) # Note: rr_seq is a global parameter so will be updated globally
+    rr_curr = sum(rr_seq) / len(rr_seq) # keep averaging over all RRs experienced at current location
 
-    ### Determine new location, by sampling from a uniform distribution over bound interval
-    new_slope = np.random.randint(params['slope_bounds'][0], params['slope_bounds'][1]) 
-    new_inter = np.random.randint(params['inter_bounds'][0], params['inter_bounds'][1]) 
-    jump_bound = (new_slope, new_inter)
+    ### with probability greedy_eps explore a new location
+    if np.random.random_sample() <= params['greedy_eps']:
+        ### Determine new location, by sampling from a uniform distribution over bound interval
+        new_slope = np.random.randint(params['slope_bounds'][0], params['slope_bounds'][1]) 
+        new_inter = np.random.randint(params['inter_bounds'][0], params['inter_bounds'][1]) 
+        jump_bound = (new_slope, new_inter)
 
-    ### If new RR is more than current RR, jump wp greedy_eps
-    rr_new_bound = estimate_rr(jump_bound)[0]
-    
-    if rr_new_bound > rr_curr and np.random.random_sample() <= params['greedy_eps']:
-        new_bound = jump_bound
+        ### If new RR is more than current RR, jump wp greedy_eps
+        (rr_new_bound, walks_new_bound, decisions_new_bound, true_states_new_bound) = estimate_rr(jump_bound)
+        
+        if rr_new_bound > rr_curr:
+            new_bound = jump_bound # update the location
+            rr_seq = [rr_new_bound] # re-initialise the list
+            # update the variables for the walks & RR so they are reflected in the figure
+            rr_curr = rr_new_bound 
+            walks_curr = walks_new_bound
+            decisions_curr = decisions_new_bound
+            true_states_curr = true_states_new_bound
+        else:
+            new_bound = current_bound
     else:
         new_bound = current_bound
 
-    return [new_bound, walks_curr, decisions_curr, true_states_curr, rr_curr]
+    return [new_bound, walks_curr, decisions_curr, true_states_curr, rr_curr, rr_seq]
 
 
-def update_bound(current_bound):
+def update_bound(current_bound, rr_seq = []):
     ''' Given a bound, compute a new bound, with the goal of (eventually) getting
         to the optimal bound
+        current_bound = (slope, intercept) of current bound
+        rr_seq = a list of RR experienced at current location (used in eps-Greedy)
     '''
 
     params = get_gen_params()
@@ -193,6 +206,6 @@ def update_bound(current_bound):
     if params['update_method'] == 'grad':
         update = gradient_descent(current_bound)
     elif params['update_method'] == 'greedy':
-        update = greedy_search(current_bound)
+        update = greedy_search(current_bound, rr_seq)
 
     return update
