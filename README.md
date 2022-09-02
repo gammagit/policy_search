@@ -2,7 +2,7 @@ This repository explores various alogirthms searching for good (even optimal) de
 
 
 ### Running the code
-To run the code simply use the Jupyter notebook `test_dynamics.ipynb`. This will run the simulation for a set of default parameters. Change the parameters (e.g. type of search algorithm, initial state, etc.) of the observer in `observer.py` (`get_gen_params()`) and the stimulus generating process in `generator.py` (`get_params()`)
+To run the code simply use the Jupyter notebook `test_dynamics.ipynb`. This will run the simulation for a set of default parameters and create a file `policy_animation.mp4`. Change the parameters (e.g. type of search algorithm, initial state, etc.) of the observer in `observer.py` (`get_gen_params()`) and the stimulus generating process in `generator.py` (`get_params()`)
 
 
 ### Description of files
