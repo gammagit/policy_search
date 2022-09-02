@@ -7,7 +7,7 @@ def get_gen_params():
     params['init_bound'] = (0, 10)  # initial slope (degrees) and intercept of bound
     params['max_step'] = 50 # maximum time step (time is discrete)
     params['rr_window'] = 'fixed' # 'fixed' / 'dynamic' length of window
-    params['win_len'] = 100 # number of trials over which to estimate reward-rate
+    params['win_len'] = 20 # number of trials over which to estimate reward-rate
     params['rwd'] = 100 # reward if correct
     params['penalty'] = 0 # reward if incorrect
 
@@ -20,8 +20,8 @@ def get_gen_params():
 
     ### Parameters for Greedy search
     params['greedy_eps'] = 0.3 # Jump probability (if RR at new location is better)
-    params['slope_bounds'] = [-60,20] # [min, max] of slopes (degrees)
-    params['inter_bounds'] = [0,20] # [min, max] of intercept (threshold)
+    params['slope_bounds'] = [-60,20] # [min, max] for sampling slopes in each jump (degrees)
+    params['inter_bounds'] = [0,20] # [min, max] for sampling intercept in each jump (threshold)
 
 
     return params
